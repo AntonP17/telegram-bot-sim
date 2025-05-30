@@ -30,6 +30,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     private final TelegramClient telegramClient;
     private Map<Long, Boolean> inSurvey = new HashMap<>();
     private Map<Long, String> userResponses = new HashMap<>();
+    private UserData userData = new UserData();
 
     public UpdateConsumer() {
         this.telegramClient = new OkHttpTelegramClient(
@@ -100,12 +101,16 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     // сам опрос
     private void handleSurveyResponse(Long chatId, String messageText) {
         // Простейшая реализация опроса
+
+      //  UserData userData = new UserData();
+
         if (userResponses.get(chatId) == null) {
             // Первый ответ - имя
 
             System.out.println("имя получено " + messageText);
 
             userResponses.put(chatId, messageText);
+            userData.setName(messageText);
             sendMessage(chatId, "Теперь введите ваш email:");
 
             System.out.println("получаем мыло и проверяем валидность ");
@@ -115,7 +120,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             if (isValidEmail(messageText)) {
 
                 System.out.println("email прошел проверку " + messageText);
-
+                userData.setEmail(messageText);
                 userResponses.put(chatId, userResponses.get(chatId) + "|" + messageText);
                 sendMessage(chatId, "Теперь введите оценку (1-10):");
 
@@ -131,15 +136,21 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             // Третий ответ - оценка
 
             System.out.println("оценка от пользователя " + messageText);
+            userData.setNumber(Integer.parseInt(messageText));
             userResponses.put(chatId, messageText);
             sendMessage(chatId, "Спасибо за опрос!");
             inSurvey.put(chatId, false);
             sendMessage(chatId, "✅ Опрос завершён! Результаты: ...");
+            System.out.println(userData);
 
-            System.out.println(userResponses);
-            for (Map.Entry<Long, String> entry : userResponses.entrySet()) {
-                System.out.println("Ключ: " + entry.getKey() + ", Значение: " + entry.getValue());
-            }
+
+
+            sendMessage(chatId,userData.toString());
+
+//            System.out.println(userResponses);
+//            for (Map.Entry<Long, String> entry : userResponses.entrySet()) {
+//                System.out.println("Ключ: " + entry.getKey() + ", Значение: " + entry.getValue());
+//            }
         }
     }
 
