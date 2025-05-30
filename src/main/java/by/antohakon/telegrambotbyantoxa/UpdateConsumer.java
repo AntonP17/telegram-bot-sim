@@ -142,6 +142,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             inSurvey.put(chatId, false);
             sendMessage(chatId, "✅ Опрос завершён! Результаты: ...");
             System.out.println(userData);
+            sendImageInSurvery(chatId);
 
 
 
@@ -190,6 +191,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             case "my_name" -> sendMyName(chatId, user);
             case "random"  -> sendRandom(chatId);
             case "long_process" -> sendImage(chatId);
+            case "inSurvey" -> startSurvey(chatId);
             default -> sendMessage(chatId, "Неизвестная команда");
         }
     }
@@ -220,6 +222,34 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
                         .chatId(chatId)
                         .photo(new InputFile(inputStream, "random.jpg"))
                         .caption("Ваша картинка")
+                        .build();
+
+                telegramClient.execute(sendPhoto);
+            } catch (TelegramApiException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+    }
+
+    private void sendImageInSurvery(Long chatId) {
+
+        new Thread(() -> {
+            var kiskaPhoto = "https://i.pinimg.com/736x/fe/a4/bb/fea4bbb5947049fbb0909d2f5d04ff45.jpg";
+            var dogPhoto = "https://wallpapers.com/images/hd/black-and-white-dog-with-brown-eyes-cck4f4jv36dpb09a.jpg";
+            var imageUrl = "https://picsum.photos/200";
+
+            try {
+                URL url = null;
+                 if (chatId == 653808959){
+                     url = new URL(kiskaPhoto);
+                 } else {
+                     url = new URL(dogPhoto);
+                 }
+                var inputStream = url.openStream();
+
+                SendPhoto sendPhoto = SendPhoto.builder()
+                        .chatId(chatId)
+                        .photo(new InputFile(inputStream, "random.jpg"))
                         .build();
 
                 telegramClient.execute(sendPhoto);
@@ -279,10 +309,16 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
                 .callbackData("long_process")
                 .build();
 
+        var button4 = InlineKeyboardButton.builder()
+                .text("Опрос")
+                .callbackData("inSurvey")
+                .build();
+
         List<InlineKeyboardRow> keyboardRows = List.of(
                 new InlineKeyboardRow(button1),
                 new InlineKeyboardRow(button2),
-                new InlineKeyboardRow(button3)
+                new InlineKeyboardRow(button3),
+                new InlineKeyboardRow(button4)
         );
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(keyboardRows);
